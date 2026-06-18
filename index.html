@@ -299,23 +299,17 @@
       transform: translateY(0);
     }
 
-    /* PAGE 5: Infinite Love Proclamation with Perfect Contrast Backdrop */
+    /* PAGE 5: Infinite Love Proclamation */
     .final-declaration {
-      font-size: 3.2rem;
+      font-size: 3.8rem;
       font-weight: 600;
-      color: #ffffff; /* High contrast clean white text */
-      background: rgba(255, 77, 109, 0.88); /* Vibrant pink capsule background */
-      padding: 22px 45px;
-      border-radius: 30px;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15), 0 0 30px rgba(255, 77, 109, 0.4);
+      color: #ffffff; /* Changed to pristine white for perfect visibility */
       text-align: center;
-      text-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+      /* Webkit stroke and dark-crimson shadow structure ensures it stands out above all flower colors */
+      -webkit-text-stroke: 3px #d90429;
+      text-shadow: 0 8px 25px rgba(217, 4, 41, 0.6);
       animation: heartbeat 1.1s infinite alternate cubic-bezier(0.25, 0.8, 0.25, 1);
       letter-spacing: 1px;
-      max-width: 90%;
-      word-wrap: break-word;
     }
 
     /* Standard Base Animations */
@@ -333,8 +327,8 @@
       50% { opacity: 0.95; transform: scale(1); }
     }
     @keyframes heartbeat {
-      0% { transform: scale(0.95); }
-      100% { transform: scale(1.04); }
+      0% { transform: scale(0.94); }
+      100% { transform: scale(1.06); }
     }
   </style>
 </head>
@@ -473,15 +467,15 @@
     let totalTaps = 0;
     function triggerLetterBurst(e) {
       totalTaps++;
-      const elements = ['✉️', '❤️', '💌', '🌹', '💖', '✨', '🌸', '💘'];
+      const elements = ['✉️', '❤️', '💌', '🌹', '💖', '✨', '💕', '💘'];
       const postbox = document.querySelector('.postbox');
       const bounding = postbox.getBoundingClientRect();
       
       const originX = bounding.left + bounding.width / 2;
       const originY = bounding.top + bounding.height / 3;
 
-      // Boosted loop counter from 12 to 40 for a gorgeous screen-filling explosion
-      for (let i = 0; i < 40; i++) {
+      // Boosted particle count to 45 for a dramatic falling/showering effect
+      for (let i = 0; i < 45; i++) {
         const leaf = document.createElement('div');
         leaf.className = 'flying-letter';
         leaf.innerText = elements[Math.floor(Math.random() * elements.length)];
@@ -490,16 +484,16 @@
         document.body.appendChild(leaf);
 
         const heading = Math.random() * Math.PI * 2;
-        const pushForce = 8 + Math.random() * 14;
         const deltaX = Math.cos(heading) * (window.innerWidth * 0.65) * Math.random();
-        const deltaY = Math.sin(heading) * (window.innerHeight * 0.65) * Math.random() - 80;
+        // Added a positive pixel bias (+ 180) to pull the letters downward like gravity
+        const deltaY = Math.sin(heading) * (window.innerHeight * 0.45) * Math.random() + 180;
         const spin = Math.random() * 720 - 360;
 
         const animation = leaf.animate([
-          { transform: 'translate(-50%, -50%) scale(0.2) rotate(0deg)', opacity: 1 },
-          { transform: `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(${1.1 + Math.random() * 1.6}) rotate(${spin}deg)`, opacity: 0 }
+          { transform: 'translate(-50%, -50%) scale(0.3) rotate(0deg)', opacity: 1 },
+          { transform: `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(${1.3 + Math.random() * 1.4}) rotate(${spin}deg)`, opacity: 0 }
         ], {
-          duration: 1500 + Math.random() * 800,
+          duration: 1700 + Math.random() * 800,
           easing: 'cubic-bezier(0.1, 0.8, 0.25, 1)',
           fill: 'forwards'
         });
@@ -509,7 +503,7 @@
 
       if (totalTaps >= 4) {
         totalTaps = -999; 
-        setTimeout(() => navigateToPage('page-letter-1'), 1100);
+        setTimeout(() => navigateToPage('page-letter-1'), 900);
       }
     }
 
@@ -526,7 +520,7 @@
     window.addEventListener('resize', setupCanvasScale);
     setupCanvasScale();
 
-    /* Pre-rendering pipeline for real-looking flower textures */
+    /* Pre-rendering pipeline for real-looking flower textures (No runtime structural overhead) */
     function buildFlowerTemplatesCache() {
       const shades = [
         { main: '#d90429', core: '#600010', count: 12 }, // Deep crimson velvet rose
@@ -614,4 +608,72 @@
         this.scale = 0;
         this.targetScale = targetScale;
         this.alpha = 0;
-        this.cacheTemplate
+        this.cacheTemplate = flowerCache[Math.floor(Math.random() * flowerCache.length)];
+        this.rotation = Math.random() * Math.PI * 2;
+        this.spin = (Math.rando() - 0.5) * 0.003;
+        this.growthRate = 0.03 + Math.random() * 0.025;
+      }
+
+      update() {
+        if (this.scale < this.targetScale) {
+          // Clean physics deceleration vector progression 
+          let gap = this.targetScale - this.scale;
+          this.scale += gap * this.growthRate + 0.001;
+          if (this.alpha < 1) this.alpha += 0.05;
+        }
+        this.rotation += this.spin;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        
+        // Fast hardware bit-blitting instead of generating heavy layout paths dynamically
+        const dSize = 240 * this.scale;
+        ctx.drawImage(this.cacheTemplate, -dSize / 2, -dSize / 2, dSize, dSize);
+        ctx.restore();
+      }
+    }
+
+    function startFlowerEngine() {
+      // Fast automated massive screen covering explosion blast sequence
+      const spawnSequence = setInterval(() => {
+        const rx = Math.random() * canvas.width;
+        const ry = Math.random() * canvas.height;
+        const rs = 0.45 + Math.random() * 0.65;
+        flowersArray.push(new PerformanceFlowerNode(rx, ry, rs));
+      }, 55);
+
+      // Transition canvas to a smooth, persistent micro ambient system forever
+      setTimeout(() => {
+        clearInterval(spawnSequence);
+        setInterval(() => {
+          if (flowersArray.length < 220) {
+            const rx = Math.random() * canvas.width;
+            const ry = Math.random() * canvas.height;
+            const rs = 0.35 + Math.random() * 0.5;
+            flowersArray.push(new PerformanceFlowerNode(rx, ry, rs));
+          }
+        }, 350);
+      }, 4500);
+    }
+
+    function engineLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Fixed step iterations for hyper smooth rendering metrics
+      for (let i = 0; i < flowersArray.length; i++) {
+        flowersArray[i].update();
+        flowersArray[i].draw();
+      }
+
+      requestAnimationFrame(engineLoop);
+    }
+    requestAnimationFrame(engineLoop);
+  </script>
+</body>
+</html>
+      
+                              
